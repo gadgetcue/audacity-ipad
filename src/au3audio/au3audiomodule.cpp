@@ -8,7 +8,7 @@
 #include "internal/au3audioengine.h"
 #include "internal/au3audiodrivercontroller.h"
 
-#if defined(Q_OS_MAC)
+#if defined(Q_OS_MACOS)
 #include "internal/platform/macos/macossystemaudiodeviceslistener.h"
 #elif defined(Q_OS_WIN)
 #include "internal/platform/windows/windowssystemaudiodeviceslistener.h"
@@ -33,7 +33,7 @@ void Au3AudioModule::registerExports()
     m_audioEngine = std::make_shared<Au3AudioEngine>();
     m_audioDriverController = std::make_shared<Au3AudioDriverController>();
 
-#if defined(Q_OS_MAC)
+#if defined(Q_OS_MACOS)
     m_systemAudioDevicesListener = std::make_shared<MacosSystemAudioDevicesListener>();
 #elif defined(Q_OS_WIN)
     m_systemAudioDevicesListener = std::make_shared<WindowsSystemAudioDevicesListener>();

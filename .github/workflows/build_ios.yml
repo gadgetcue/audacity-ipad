@@ -41,6 +41,7 @@ jobs:
 
     - name: Install Qt (host macOS + iOS target)
       run: |
+        brew install ninja || true
         python3 -m pip install --break-system-packages aqtinstall
         python3 -m aqt install-qt mac desktop $QT_VERSION clang_64 -O $RUNNER_TEMP/Qt \
           -m qt5compat qtnetworkauth qtshadertools qtscxml

@@ -22,7 +22,7 @@ set(MODULE_SRC
     ${CMAKE_CURRENT_LIST_DIR}/internal/defaultplaybackpolicy.h
     )
 
-if (OS_IS_MAC)
+if (OS_IS_MAC AND NOT OS_IS_IOS)
     set(MODULE_SRC ${MODULE_SRC}
         ${CMAKE_CURRENT_LIST_DIR}/internal/platform/macos/macossystemaudiodeviceslistener.cpp
         ${CMAKE_CURRENT_LIST_DIR}/internal/platform/macos/macossystemaudiodeviceslistener.h
@@ -73,7 +73,7 @@ set(MODULE_LINK
         au3-utility
 )
 
-if (OS_IS_MAC)
+if (OS_IS_MAC AND NOT OS_IS_IOS)
     set(MODULE_LINK ${MODULE_LINK} "-framework CoreAudio")
 elseif (OS_IS_WIN)
     set(MODULE_LINK ${MODULE_LINK} ole32)

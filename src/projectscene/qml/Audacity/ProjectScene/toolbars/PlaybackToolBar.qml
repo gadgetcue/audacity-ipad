@@ -45,7 +45,8 @@ Item {
 
         anchors.verticalCenter: parent.verticalCenter
 
-        spacing: 2
+        spacing: 0
+        spacerWidth: 16 // 10px gap between capsules + 3px capsule padding each side
 
         rowHeight: isMultiline ? 32 : 48
         topPadding: isMultiline ? 8 : 0
@@ -87,10 +88,10 @@ Item {
             id: controlComp
 
             StyledToolBarItem {
-                width: 28
-                height: width
+                width: 32
+                height: 28
 
-                backgroundRadius: 2
+                backgroundRadius: 14
 
                 iconFont: ui.theme.iconsFont
                 iconColor: Boolean(itemData) ? itemData.iconColor : ui.theme.fontPrimaryColor
@@ -103,10 +104,10 @@ Item {
             id: projectControlComp
 
             StyledToolBarItem {
-                width: 28
-                height: width
+                width: 32
+                height: 28
 
-                backgroundRadius: 2
+                backgroundRadius: 14
 
                 iconFont: ui.theme.iconsFont
             }
@@ -123,7 +124,7 @@ Item {
                 width: Boolean(itemData) ? Math.max(288, Math.min(itemData.meterSize, view.maximumWidth)) : 288
                 height: 28
 
-                backgroundRadius: 2
+                backgroundRadius: 14
 
                 volumeLevel: Boolean(itemData) ? itemData.level : 0
                 leftCurrentVolumePressure: Boolean(itemData) ? itemData.leftChannelPressure : -145
@@ -251,10 +252,10 @@ Item {
             RecordLevel {
                 property var itemData: null
 
-                width: 28
-                height: width
+                width: 32
+                height: 28
 
-                backgroundRadius: 2
+                backgroundRadius: 14
 
                 meterStyle: Boolean(itemData) ? itemData.meterStyle : PlaybackMeterStyle.Default
 

@@ -31,8 +31,8 @@ StyledToolBarView {
         id: controlComp
 
         StyledToolBarItem {
-            width: 30
-            height: width
+            width: 32
+            height: 28
 
             navigation.panel: root.navigationPanel
         }

@@ -159,7 +159,9 @@ if (OS_IS_MAC)
         endif()
     endif() #MUE_COMPILE_QT5_COMPAT
 
-    set(MACOSX_DEPLOYMENT_TARGET 13.0)
-    set(CMAKE_OSX_DEPLOYMENT_TARGET 13.0)
+    if (NOT OS_IS_IOS)
+        set(MACOSX_DEPLOYMENT_TARGET 13.0)
+        set(CMAKE_OSX_DEPLOYMENT_TARGET 13.0)
+    endif()
 endif(OS_IS_MAC)
 

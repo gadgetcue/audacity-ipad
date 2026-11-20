@@ -15,7 +15,7 @@ StyledToolBarView {
     navigationPanel.name: "ProjectToolBar"
     navigationPanel.accessible.name: qsTrc("projectscene", "Audio setup and sharing")
 
-    spacing: 2
+    spacing: 0
     rowHeight: 28
 
     model: ProjectToolBarModel {

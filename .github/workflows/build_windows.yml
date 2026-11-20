@@ -4,6 +4,11 @@ on:
   push:
     branches:
     - main
+    paths-ignore:
+    - '.github/workflows/build_ios.yml'
+    - 'muse_deps/**'
+    - '**/*.mm'
+    - 'ios/**'
 
   workflow_dispatch:
     inputs:

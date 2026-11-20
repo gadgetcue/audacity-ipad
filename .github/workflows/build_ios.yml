@@ -1,0 +1,139 @@
+name: "Build: iPad and iPhone"
+
+# Builds Audacity 4 for iOS/iPadOS (universal app) with Qt for iOS.
+# - Device build -> .ipa (signed if signing secrets exist, else unsigned for Sideloadly/AltStore)
+# - Simulator build -> installed and launched on an iPad and an iPhone simulator, screenshots uploaded
+#
+# Signing secrets (all optional; without them the .ipa is unsigned):
+#   IOS_CERT_P12_BASE64      base64 of your Apple Development/Distribution certificate (.p12)
+#   IOS_CERT_PASSWORD        password of that .p12
+#   IOS_PROFILE_BASE64       base64 of the .mobileprovision for bundle id below (or a wildcard profile)
+#   IOS_TEAM_ID              your 10-character Apple Team ID
+#   IOS_BUNDLE_ID            optional, defaults to org.gadgetcue.audacity
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+concurrency:
+  group: build_ios-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  QT_VERSION: '6.11.0'
+  DEVELOPER_DIR: /Applications/Xcode_26.2.app/Contents/Developer
+  BUNDLE_ID: ${{ secrets.IOS_BUNDLE_ID || 'org.gadgetcue.audacity' }}
+
+jobs:
+  ios:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { sdk: iphoneos,        sysroot: iphoneos,        archs: arm64 }
+          - { sdk: iphonesimulator, sysroot: iphonesimulator, archs: arm64 }
+    runs-on: macos-26
+    steps:
+    - uses: actions/checkout@v7
+      with:
+        submodules: recursive
+
+    - name: Install Qt (host macOS + iOS target)
+      run: |
+        python3 -m pip install --break-system-packages aqtinstall
+        python3 -m aqt install-qt mac desktop $QT_VERSION clang_64 -O $RUNNER_TEMP/Qt \
+          -m qt5compat qtnetworkauth qtshadertools qtscxml
+        python3 -m aqt install-qt mac ios $QT_VERSION ios -O $RUNNER_TEMP/Qt \
+          -m qt5compat qtnetworkauth qtshadertools qtscxml
+        echo "QT_HOST=$RUNNER_TEMP/Qt/$QT_VERSION/macos" >> $GITHUB_ENV
+        echo "QT_IOS=$RUNNER_TEMP/Qt/$QT_VERSION/ios"   >> $GITHUB_ENV
+
+    - name: Configure
+      run: |
+        $QT_IOS/bin/qt-cmake -S . -B build.ios -G Xcode \
+          -DQT_HOST_PATH=$QT_HOST \
+          -DCMAKE_SYSTEM_NAME=iOS \
+          -DCMAKE_OSX_SYSROOT=${{ matrix.sysroot }} \
+          -DCMAKE_OSX_ARCHITECTURES=${{ matrix.archs }} \
+          -DCMAKE_OSX_DEPLOYMENT_TARGET=17.0 \
+          -DCMAKE_XCODE_ATTRIBUTE_TARGETED_DEVICE_FAMILY="1,2" \
+          -DCMAKE_XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER=$BUNDLE_ID \
+          -DCMAKE_XCODE_ATTRIBUTE_CODE_SIGNING_ALLOWED=NO \
+          -DCMAKE_BUILD_TYPE=Release \
+          -DAU_PLATFORM_IOS=ON \
+          -DAU_MODULE_EFFECTS_VST=OFF -DAU_MODULE_EFFECTS_LV2=OFF -DAU_MODULE_EFFECTS_AUDIO_UNIT=OFF \
+          -DAU_BUILD_MUSEHUB_MODULE=OFF -DAU_BUILD_CLOUD_AUDIOCOM=OFF -DAU_BUILD_USAGEINFO_MODULE=OFF \
+          -DAU_USE_PORTMIXER=OFF -DAU_RUN_LRELEASE=OFF \
+          -DMUSE_ENABLE_UNIT_TESTS=OFF -DMUSE_COMPILE_USE_UNITY=OFF -DMUSE_COMPILE_USE_CCACHE=OFF
+
+    - name: Build
+      run: |
+        cmake --build build.ios --config Release -- -sdk ${{ matrix.sdk }} -quiet \
+          CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO
+        APP=$(find build.ios -name "*.app" -path "*Release-${{ matrix.sdk }}*" -maxdepth 6 | head -1)
+        echo "APP=$APP" >> $GITHUB_ENV
+        test -d "$APP"
+
+    # ---------- Device: package .ipa (signed when secrets exist) ----------
+    - name: Sign (if secrets present)
+      if: matrix.sdk == 'iphoneos'
+      env:
+        P12: ${{ secrets.IOS_CERT_P12_BASE64 }}
+        P12_PW: ${{ secrets.IOS_CERT_PASSWORD }}
+        PROFILE: ${{ secrets.IOS_PROFILE_BASE64 }}
+        TEAM: ${{ secrets.IOS_TEAM_ID }}
+      run: |
+        if [ -z "$P12" ] || [ -z "$PROFILE" ]; then echo "No signing secrets: producing unsigned .ipa"; exit 0; fi
+        KC=$RUNNER_TEMP/sign.keychain-db; KCPW=$(uuidgen)
+        security create-keychain -p "$KCPW" "$KC"
+        security set-keychain-settings -lut 3600 "$KC"
+        security unlock-keychain -p "$KCPW" "$KC"
+        echo "$P12" | base64 -d > $RUNNER_TEMP/cert.p12
+        security import $RUNNER_TEMP/cert.p12 -P "$P12_PW" -A -t cert -f pkcs12 -k "$KC"
+        security list-keychain -d user -s "$KC"
+        security set-key-partition-list -S apple-tool:,apple: -k "$KCPW" "$KC"
+        echo "$PROFILE" | base64 -d > "$APP/embedded.mobileprovision"
+        security cms -D -i "$APP/embedded.mobileprovision" > $RUNNER_TEMP/profile.plist
+        /usr/libexec/PlistBuddy -x -c 'Print :Entitlements' $RUNNER_TEMP/profile.plist > $RUNNER_TEMP/ent.plist
+        IDENTITY=$(security find-identity -v -p codesigning "$KC" | head -1 | awk '{print $2}')
+        find "$APP" \( -name "*.framework" -o -name "*.dylib" \) -print0 | xargs -0 -I{} codesign -f -s "$IDENTITY" {}
+        codesign -f -s "$IDENTITY" --entitlements $RUNNER_TEMP/ent.plist "$APP"
+        codesign -v "$APP"
+        echo "SIGNED=true" >> $GITHUB_ENV
+
+    - name: Package .ipa
+      if: matrix.sdk == 'iphoneos'
+      run: |
+        mkdir -p ipa/Payload && cp -R "$APP" ipa/Payload/
+        cd ipa && zip -qry ../Audacity-iOS-${SIGNED:+signed}${SIGNED:-unsigned}.ipa Payload
+
+    - uses: actions/upload-artifact@v7
+      if: matrix.sdk == 'iphoneos'
+      with:
+        name: Audacity-iOS-ipa
+        path: Audacity-iOS-*.ipa
+
+    # ---------- Simulator: smoke test on iPad and iPhone ----------
+    - name: Launch on iPad and iPhone simulators
+      if: matrix.sdk == 'iphonesimulator'
+      run: |
+        mkdir -p shots
+        for DEV in "iPad Pro 13-inch (M5)" "iPhone 17 Pro"; do
+          UDID=$(xcrun simctl list devices available -j | python3 -c "import json,sys;d=json.load(sys.stdin)['devices'];print(next((x['udid'] for v in d.values() for x in v if x['name']=='$DEV'),''))")
+          if [ -z "$UDID" ]; then UDID=$(xcrun simctl list devices available | grep -m1 "${DEV%% *}" | grep -oE '[0-9A-F-]{36}'); fi
+          xcrun simctl boot "$UDID" || true
+          xcrun simctl bootstatus "$UDID" -b
+          xcrun simctl install "$UDID" "$APP"
+          xcrun simctl launch --console-pty "$UDID" "$BUNDLE_ID" > "shots/${DEV// /_}.log" 2>&1 &
+          sleep 40
+          xcrun simctl io "$UDID" screenshot "shots/${DEV// /_}.png"
+          xcrun simctl spawn "$UDID" launchctl list | grep -q "$BUNDLE_ID" || { echo "::error::App not running on $DEV"; cat "shots/${DEV// /_}.log"; exit 1; }
+          xcrun simctl shutdown "$UDID"
+        done
+
+    - uses: actions/upload-artifact@v7
+      if: always() && matrix.sdk == 'iphonesimulator'
+      with:
+        name: simulator-screenshots
+        path: shots/

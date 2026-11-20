@@ -418,6 +418,10 @@ elseif(OS_IS_FBSD)
 ###########################################
 # MacOS
 ###########################################
+elseif(OS_IS_IOS)
+    # iOS: Qt is static and QML is compiled in; the .app is packaged straight from the build
+    install(TARGETS audacity BUNDLE DESTINATION ${CMAKE_INSTALL_PREFIX})
+
 elseif(OS_IS_MAC)
 
     install(TARGETS audacity BUNDLE DESTINATION ${CMAKE_INSTALL_PREFIX})

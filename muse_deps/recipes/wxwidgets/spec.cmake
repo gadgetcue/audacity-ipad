@@ -43,5 +43,8 @@ set(DEP_PATCHES_MACOS
     patch/0001-zlib-no-classic-mac-fdopen.patch
     patch/0002-png-no-classic-mac-fp.patch
 )
+if(CMAKE_SYSTEM_NAME STREQUAL "iOS")
+    list(APPEND DEP_PATCHES_MACOS patch/0003-ios-no-system.patch)
+endif()
 
 set(DEP_LICENSE_FILES "docs/licence.txt")

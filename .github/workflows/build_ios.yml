@@ -50,6 +50,13 @@ jobs:
         echo "QT_HOST=$RUNNER_TEMP/Qt/$QT_VERSION/macos" >> $GITHUB_ENV
         echo "QT_IOS=$RUNNER_TEMP/Qt/$QT_VERSION/ios"   >> $GITHUB_ENV
 
+    - name: Restore iOS dependencies
+      uses: actions/cache/restore@v5
+      with:
+        path: build.ios/_deps
+        key: ios-deps-${{ matrix.sdk }}-${{ hashFiles('muse_deps/**', 'buildscripts/cmake/DependencyManifest.cmake', 'muse/buildscripts/cmake/ExtDepsManifest.cmake') }}
+        restore-keys: ios-deps-${{ matrix.sdk }}-
+
     - name: Configure
       run: |
         $QT_IOS/bin/qt-cmake -S . -B build.ios -G Xcode \
@@ -67,6 +74,13 @@ jobs:
           -DAU_BUILD_MUSEHUB_MODULE=OFF -DAU_BUILD_CLOUD_AUDIOCOM=OFF -DAU_BUILD_USAGEINFO_MODULE=OFF \
           -DAU_USE_PORTMIXER=OFF -DAU_RUN_LRELEASE=OFF \
           -DMUSE_ENABLE_UNIT_TESTS=OFF -DMUSE_COMPILE_USE_UNITY=OFF -DMUSE_COMPILE_USE_CCACHE=OFF
+
+    - name: Save iOS dependencies
+      if: always()
+      uses: actions/cache/save@v5
+      with:
+        path: build.ios/_deps
+        key: ios-deps-${{ matrix.sdk }}-${{ hashFiles('muse_deps/**', 'buildscripts/cmake/DependencyManifest.cmake', 'muse/buildscripts/cmake/ExtDepsManifest.cmake') }}-${{ github.run_id }}
 
     - name: Build
       run: |

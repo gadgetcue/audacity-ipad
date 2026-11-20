@@ -28,7 +28,12 @@ set(DEP_CMAKE_ARGS
 # enables — base-only does NOT compile on macOS (confirmed with a clean upstream
 # build). So build GUI on macOS (we still consume only libwx_baseu). Linux and
 # Windows build base-only (no cocoa, and we don't want a GTK dependency).
-set(DEP_CMAKE_ARGS_MACOS   -DwxUSE_GUI=ON)
+if(CMAKE_SYSTEM_NAME STREQUAL "iOS")
+    # iOS: wxBase only, on the osx_iphone toolkit (no AppKit)
+    set(DEP_CMAKE_ARGS_MACOS -DwxBUILD_TOOLKIT=osx_iphone -DwxUSE_GUI=OFF)
+else()
+    set(DEP_CMAKE_ARGS_MACOS -DwxUSE_GUI=ON)
+endif()
 set(DEP_CMAKE_ARGS_LINUX   -DwxUSE_GUI=OFF)
 set(DEP_CMAKE_ARGS_WINDOWS -DwxUSE_GUI=OFF)
 

@@ -1,4 +1,4 @@
-if(BD_OS STREQUAL "windows")
+if(BD_OS STREQUAL "windows" OR CMAKE_SYSTEM_NAME STREQUAL "iOS")
     set(LIBTYPE STATIC)
 else()
     set(LIBTYPE SHARED)

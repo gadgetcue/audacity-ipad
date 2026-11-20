@@ -167,7 +167,7 @@ add_to_link_if_exists(automation)
 set (AUDACITY_APPEND_SRC)
 
 list(APPEND AUDACITY_APPEND_SRC backgroundprocess.h)
-if (OS_IS_MAC)
+if (OS_IS_MAC AND NOT OS_IS_IOS)
     list(APPEND AUDACITY_APPEND_SRC internal/platform/macos/backgroundprocess.mm)
 else()
     list(APPEND AUDACITY_APPEND_SRC internal/platform/stub/backgroundprocess.cpp)
@@ -246,7 +246,17 @@ if (MUSE_ENABLE_UNIT_TESTS_CODE_COVERAGE)
     target_link_options(audacity PRIVATE ${COVERAGE_LINK_FLAGS})
 endif()
 
-if (OS_IS_MAC)
+if (OS_IS_IOS)
+    # iPadOS / iOS universal app bundle
+    set_target_properties(audacity PROPERTIES
+        MACOSX_BUNDLE TRUE
+        MACOSX_BUNDLE_INFO_PLIST ${PROJECT_SOURCE_DIR}/buildscripts/packaging/iOS/Info.plist.in
+        XCODE_ATTRIBUTE_TARGETED_DEVICE_FAMILY "1,2"
+        XCODE_ATTRIBUTE_CODE_SIGNING_ALLOWED NO
+        XCODE_ATTRIBUTE_ENABLE_BITCODE NO
+    )
+    target_link_libraries(audacity PRIVATE "-framework UIKit" "-framework AVFoundation" "-framework AudioToolbox")
+elseif (OS_IS_MAC)
     # macOS localizes its own interface - the native file pickers, standard
     # buttons and the application menu - according to the localizations the
     # bundle declares, not according to the Qt catalogues we load. Declare

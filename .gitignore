@@ -263,6 +263,8 @@ temp_*
 *.local.cmake
 
 *_deps/*
+!/muse_deps/
+!/muse_deps/**
 
 *.AppImage
 

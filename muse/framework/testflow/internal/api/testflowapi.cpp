@@ -1,0 +1,252 @@
+/*
+ * SPDX-License-Identifier: GPL-3.0-only
+ * MuseScore-CLA-applies
+ *
+ * MuseScore Studio
+ * Music Composition & Notation
+ *
+ * Copyright (C) 2021 MuseScore Limited and others
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 3 as
+ * published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+#include "testflowapi.h"
+
+#include <QTimer>
+#include <QEventLoop>
+#include <QFileInfo>
+#include <QDir>
+#include <QDateTime>
+
+#include "async/async.h"
+#include "io/fileinfo.h"
+
+#include "log.h"
+
+using namespace muse::actions;
+using namespace muse::testflow::api;
+using namespace muse::testflow;
+
+TestflowApi::TestflowApi(muse::api::IApiEngine* e)
+    : ApiObject(e)
+{
+    srand(time(nullptr)); // Seed the time for random number generation
+}
+
+void TestflowApi::setInterval(int msec)
+{
+    testflow()->setDefaultIntervalMsec(msec);
+}
+
+void TestflowApi::runTestCase(const QJSValue& testCase)
+{
+    TestCase ts(testCase);
+    testflow()->runTestCase(ts);
+}
+
+bool TestflowApi::pause(bool immediately)
+{
+    if (!testflow()->isInteractive()) {
+        LOGW() << "[testflow] non-interactive run, pause skipped";
+        return true;
+    }
+
+    if (immediately) {
+        return askAndWait("Pause", "Continue?", {
+            interactive()->buttonData(IInteractive::Button::Continue),
+            interactive()->buttonData(IInteractive::Button::Abort)
+        }) == int(IInteractive::Button::Continue);
+    }
+
+    testflow()->pause();
+    return true;
+}
+
+bool TestflowApi::confirm(const QString& msg)
+{
+    if (!testflow()->isInteractive()) {
+        LOGW() << "[testflow] non-interactive run, confirm skipped: " << msg;
+        return true;
+    }
+
+    return askAndWait("Confirm", msg.toStdString(), {
+        interactive()->buttonData(IInteractive::Button::Continue),
+        IInteractive::ButtonData(PAUSE_BTN, "Pause"),
+        interactive()->buttonData(IInteractive::Button::Abort)
+    }) == int(IInteractive::Button::Continue);
+}
+
+int TestflowApi::askAndWait(const std::string& title, const std::string& text, const IInteractive::ButtonDatas& buttons)
+{
+    //! NOTE The step is paused while the question is asked,
+    //! and sleeps until the answer unpauses it (the same as when the user pauses it during a sleep)
+    testflow()->pause();
+
+    auto answer = std::make_shared<int>(int(IInteractive::Button::NoButton));
+
+    interactive()->question(title, text, buttons)
+    .onResolve(this, [this, answer](const IInteractive::Result& res) {
+        if (res.standardButton() == IInteractive::Button::Abort) {
+            *answer = int(IInteractive::Button::Abort);
+            abort();
+            return;
+        }
+
+        if (res.button() == PAUSE_BTN) {
+            //! NOTE The step stays paused until the test case is unpaused
+            *answer = PAUSE_BTN;
+            return;
+        }
+
+        *answer = int(IInteractive::Button::Continue);
+        testflow()->unpause();
+    });
+
+    testflow()->sleep(-1); // sleeps while paused
+
+    return *answer;
+}
+
+void TestflowApi::abort()
+{
+    testflow()->abort();
+}
+
+void TestflowApi::error(const QString& msg)
+{
+    testflow()->fatal(msg);
+}
+
+void TestflowApi::expectQuit(int timeoutMsec)
+{
+    testflow()->expectQuit(timeoutMsec);
+}
+
+void TestflowApi::fatal(const QString& msg)
+{
+    testflow()->fatal(msg);
+}
+
+bool TestflowApi::openProject(const QString& name)
+{
+    TRACEFUNC;
+    io::paths_t dirs = testflowConfiguration()->testingFilesDirPaths();
+
+    io::path_t filePath;
+    bool found = false;
+    for (const io::path_t& dir : dirs) {
+        filePath = dir + "/" + name;
+        if (io::FileInfo::exists(filePath)) {
+            found = true;
+            break;
+        }
+    }
+
+    if (!found) {
+        LOGE() << "not found file: " << name;
+        return false;
+    }
+
+    rcommand::Params params;
+    params["url"] = Val(QUrl::fromLocalFile(filePath.toQString()).toString());
+    params["display_name"] = Val(std::string());
+    commandDispatcher()->dispatch(rcommand::make_request(rcommand::Command("command://project/open"), params));
+
+    return true;
+}
+
+bool TestflowApi::isCommandEnabled(const QString& command) const
+{
+    return commandsState() ? commandsState()->commandState(rcommand::Command(command.toStdString())).enabled : false;
+}
+
+bool TestflowApi::isCommandChecked(const QString& command) const
+{
+    return commandsState() ? commandsState()->commandState(rcommand::Command(command.toStdString())).checked : false;
+}
+
+void TestflowApi::saveProject(const QString& name)
+{
+    TRACEFUNC;
+    io::path_t dir = testflowConfiguration()->savingFilesPath();
+    if (!QFileInfo::exists(dir.toQString())) {
+        QDir().mkpath(dir.toQString());
+    }
+
+    io::path_t filePath = dir + "/" + QDateTime::currentDateTime().toString("yyMMddhhmmss") + "_" + name;
+
+    rcommand::Params params;
+    params["path"] = Val(filePath.toStdString());
+    commandDispatcher()->dispatch(rcommand::make_request(rcommand::Command("command://project/save-at"), params));
+}
+
+void TestflowApi::sleep(int msec)
+{
+    if (msec < 0) {
+        msec = testflow()->intervalMsec();
+    }
+
+    testflow()->sleep(msec);
+}
+
+void TestflowApi::waitPopup()
+{
+    //! NOTE We could do it smartly, check a current popup actually opened,
+    //! but or just sleep some time
+    sleep(2000);
+}
+
+void TestflowApi::seeChanges(int msec)
+{
+    if (msec < 0) {
+        msec = testflow()->intervalMsec() / 2;
+    }
+    sleep(msec);
+}
+
+void TestflowApi::async(const QJSValue& func, const QJSValueList& args)
+{
+    async::Async::call(this, [func, args]() {
+        QJSValue mut_func = func;
+        mut_func.call(args);
+    });
+}
+
+int TestflowApi::randomInt(int min, int max) const
+{
+    int val = rand() % (max - min + 1) + min;
+    return val;
+}
+
+int TestflowApi::fileSize(const QString& pathStr) const
+{
+    RetVal<uint64_t> size = fileSystem()->fileSize(io::path_t(pathStr));
+    if (!size.ret) {
+        LOGD() << "filed get file size, err: " << size.ret.toString();
+    }
+    return size.val;
+}
+
+QString TestflowApi::selectedFilePath() const
+{
+    return testflow()->testflowInteractive()->selectedFilePath().toQString();
+}
+
+void TestflowApi::showMainWindowOnFront()
+{
+    //! NOTE A non-interactive run must not take the focus from the user or from other runs in parallel
+    if (!testflow()->isInteractive()) {
+        return;
+    }
+
+    mainWindow()->requestShowOnFront();
+}

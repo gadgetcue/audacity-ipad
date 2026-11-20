@@ -30,7 +30,7 @@ set(DEP_CMAKE_ARGS
 # Windows build base-only (no cocoa, and we don't want a GTK dependency).
 if(CMAKE_SYSTEM_NAME STREQUAL "iOS")
     # iOS: wxBase only, on the osx_iphone toolkit (no AppKit)
-    set(DEP_CMAKE_ARGS_MACOS -DwxBUILD_TOOLKIT=osx_iphone -DwxUSE_GUI=OFF)
+    set(DEP_CMAKE_ARGS_MACOS -DIPHONE=ON -DwxUSE_GUI=OFF -DwxUSE_FSWATCHER=OFF -DwxUSE_SECRETSTORE=OFF)
 else()
     set(DEP_CMAKE_ARGS_MACOS -DwxUSE_GUI=ON)
 endif()

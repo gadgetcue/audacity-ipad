@@ -30,7 +30,12 @@ set(DEP_CMAKE_ARGS
 # Windows build base-only (no cocoa, and we don't want a GTK dependency).
 if(CMAKE_SYSTEM_NAME STREQUAL "iOS")
     # iOS: wxBase only, on the osx_iphone toolkit (no AppKit)
-    set(DEP_CMAKE_ARGS_MACOS -DIPHONE=ON -DwxUSE_GUI=OFF -DwxUSE_FSWATCHER=OFF -DwxUSE_SECRETSTORE=OFF)
+    # wxBase on Apple needs the toolkit defines, so build wx's own iOS port (osx_iphone);
+    # Audacity only links libwx_baseu
+    set(DEP_CMAKE_ARGS_MACOS -DIPHONE=ON -DwxUSE_GUI=ON -DwxBUILD_TOOLKIT=osx_iphone
+        -DwxUSE_FSWATCHER=OFF -DwxUSE_SECRETSTORE=OFF -DwxUSE_OPENGL=OFF -DwxUSE_WEBVIEW=OFF
+        -DwxUSE_MEDIACTRL=OFF -DwxUSE_STC=OFF -DwxUSE_RICHTEXT=OFF -DwxUSE_AUI=OFF -DwxUSE_PROPGRID=OFF
+        -DwxUSE_RIBBON=OFF -DwxUSE_HTML=OFF -DwxUSE_XRC=OFF -DwxUSE_LIBTIFF=OFF -DwxUSE_LIBJPEG=OFF)
 else()
     set(DEP_CMAKE_ARGS_MACOS -DwxUSE_GUI=ON)
 endif()

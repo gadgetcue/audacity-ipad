@@ -1,0 +1,255 @@
+/*
+* Audacity: A Digital Audio Editor
+*/
+#include "recordconfiguration.h"
+
+#include "global/settings.h"
+
+#include "audio/audiotypes.h"
+
+using namespace muse;
+using namespace au::record;
+
+namespace {
+const muse::Settings::Key MIC_METERING_KEY("record", "record/micMetering");
+const muse::Settings::Key INPUT_MONITORING_KEY("record", "record/inputMonitoring");
+const muse::Settings::Key LEAD_IN_TIME_DURATION_KEY("record", "record/leadInTimeDuration");
+const muse::Settings::Key CROSSFADE_DURATION_KEY("record", "record/crossfadeDuration");
+const muse::Settings::Key SOUND_ACTIVATED_RECORDING_KEY("record", "record/soundActivatedRecording");
+const muse::Settings::Key SOUND_ACTIVATION_LEVEL_KEY("record", "record/soundActivationLevel");
+
+const muse::Settings::Key TIMED_RECORDING_DURATION_KEY("record", "record/timedRecording/durationSeconds");
+const muse::Settings::Key TIMED_RECORDING_SAVE_PROJECT_KEY("record", "record/timedRecording/saveProject");
+const muse::Settings::Key TIMED_RECORDING_EXPORT_AUDIO_KEY("record", "record/timedRecording/exportAudio");
+const muse::Settings::Key TIMED_RECORDING_QUIT_AUDACITY_KEY("record", "record/timedRecording/quitAudacity");
+
+//! NOTE: these keys deliberately match the au3 preference paths (bridged to the
+//! same settings storage), so values recorded by au3 code stay readable;
+//! "RecodingTrackName" reproduces the au3 key's typo
+const muse::Settings::Key RECORDING_NAME_CUSTOM_KEY("record", "GUI/TrackNames/RecordingNameCustom");
+const muse::Settings::Key CUSTOM_TRACK_NAME_KEY("record", "GUI/TrackNames/RecodingTrackName");
+const muse::Settings::Key TRACK_NUMBER_KEY("record", "GUI/TrackNames/TrackNumber");
+const muse::Settings::Key DATE_STAMP_KEY("record", "GUI/TrackNames/DateStamp");
+const muse::Settings::Key TIME_STAMP_KEY("record", "GUI/TrackNames/TimeStamp");
+const muse::Settings::Key OVERDUB_KEY("record", "AudioIO/Duplex");
+const muse::Settings::Key RECORD_ON_NEW_TRACK_KEY("record", "GUI/PreferNewTrackRecord");
+const muse::Settings::Key DETECT_DROPOUTS_KEY("record", "Warnings/DropoutDetected");
+}
+
+void RecordConfiguration::init()
+{
+    muse::settings()->setDefaultValue(MIC_METERING_KEY, muse::Val(true));
+    muse::settings()->valueChanged(MIC_METERING_KEY).onReceive(nullptr, [this](const muse::Val&) {
+        m_isMicMeteringOnChanged.notify();
+    });
+
+    muse::settings()->setDefaultValue(INPUT_MONITORING_KEY, muse::Val(false));
+    muse::settings()->valueChanged(INPUT_MONITORING_KEY).onReceive(nullptr, [this](const muse::Val&) {
+        m_isInputMonitoringOnChanged.notify();
+    });
+
+    muse::settings()->setDefaultValue(OVERDUB_KEY, muse::Val(true));
+    muse::settings()->valueChanged(OVERDUB_KEY).onReceive(nullptr, [this](const muse::Val&) {
+        m_isOverdubOnChanged.notify();
+    });
+
+    muse::settings()->setDefaultValue(RECORD_ON_NEW_TRACK_KEY, muse::Val(false));
+    muse::settings()->valueChanged(RECORD_ON_NEW_TRACK_KEY).onReceive(nullptr, [this](const muse::Val&) {
+        m_recordOnNewTrackChanged.notify();
+    });
+
+    muse::settings()->setDefaultValue(DETECT_DROPOUTS_KEY, muse::Val(true));
+    muse::settings()->valueChanged(DETECT_DROPOUTS_KEY).onReceive(nullptr, [this](const muse::Val&) {
+        m_detectDropoutsChanged.notify();
+    });
+
+    muse::settings()->setDefaultValue(LEAD_IN_TIME_DURATION_KEY, muse::Val(2.0));
+    muse::settings()->valueChanged(LEAD_IN_TIME_DURATION_KEY).onReceive(nullptr, [this](const muse::Val&) {
+        m_leadInTimeDurationChanged.notify();
+    });
+
+    muse::settings()->setDefaultValue(CROSSFADE_DURATION_KEY, muse::Val(10.0));
+    muse::settings()->valueChanged(CROSSFADE_DURATION_KEY).onReceive(nullptr, [this](const muse::Val&) {
+        m_crossfadeDurationChanged.notify();
+    });
+
+    const TimedRecordingOptions timedRecordingDefaults;
+    muse::settings()->setDefaultValue(TIMED_RECORDING_DURATION_KEY, muse::Val(timedRecordingDefaults.durationSeconds));
+    muse::settings()->setDefaultValue(TIMED_RECORDING_SAVE_PROJECT_KEY, muse::Val(timedRecordingDefaults.saveProject));
+    muse::settings()->setDefaultValue(TIMED_RECORDING_EXPORT_AUDIO_KEY, muse::Val(timedRecordingDefaults.exportAudio));
+    muse::settings()->setDefaultValue(TIMED_RECORDING_QUIT_AUDACITY_KEY, muse::Val(timedRecordingDefaults.quitAudacity));
+
+    muse::settings()->setDefaultValue(SOUND_ACTIVATED_RECORDING_KEY, muse::Val(false));
+    muse::settings()->valueChanged(SOUND_ACTIVATED_RECORDING_KEY).onReceive(nullptr, [this](const muse::Val&) {
+        m_isSoundActivatedRecordingOnChanged.notify();
+    });
+
+    muse::settings()->setDefaultValue(SOUND_ACTIVATION_LEVEL_KEY, muse::Val(au::audio::DEFAULT_SOUND_ACTIVATION_LEVEL_DB));
+    muse::settings()->valueChanged(SOUND_ACTIVATION_LEVEL_KEY).onReceive(nullptr, [this](const muse::Val&) {
+        m_soundActivationLevelChanged.notify();
+    });
+}
+
+bool RecordConfiguration::isMicMeteringOn() const
+{
+    return muse::settings()->value(MIC_METERING_KEY).toBool();
+}
+
+void RecordConfiguration::setIsMicMeteringOn(bool enable)
+{
+    muse::settings()->setSharedValue(MIC_METERING_KEY, muse::Val(enable));
+}
+
+muse::async::Notification RecordConfiguration::isMicMeteringOnChanged() const
+{
+    return m_isMicMeteringOnChanged;
+}
+
+bool RecordConfiguration::isInputMonitoringOn() const
+{
+    return muse::settings()->value(INPUT_MONITORING_KEY).toBool();
+}
+
+void RecordConfiguration::setIsInputMonitoringOn(bool enable)
+{
+    muse::settings()->setSharedValue(INPUT_MONITORING_KEY, muse::Val(enable));
+}
+
+muse::async::Notification RecordConfiguration::isInputMonitoringOnChanged() const
+{
+    return m_isInputMonitoringOnChanged;
+}
+
+bool RecordConfiguration::isOverdubOn() const
+{
+    return muse::settings()->value(OVERDUB_KEY).toBool();
+}
+
+void RecordConfiguration::setIsOverdubOn(bool enable)
+{
+    muse::settings()->setSharedValue(OVERDUB_KEY, muse::Val(enable));
+}
+
+muse::async::Notification RecordConfiguration::isOverdubOnChanged() const
+{
+    return m_isOverdubOnChanged;
+}
+
+bool RecordConfiguration::recordOnNewTrack() const
+{
+    return muse::settings()->value(RECORD_ON_NEW_TRACK_KEY).toBool();
+}
+
+void RecordConfiguration::setRecordOnNewTrack(bool enable)
+{
+    muse::settings()->setSharedValue(RECORD_ON_NEW_TRACK_KEY, muse::Val(enable));
+}
+
+muse::async::Notification RecordConfiguration::recordOnNewTrackChanged() const
+{
+    return m_recordOnNewTrackChanged;
+}
+
+bool RecordConfiguration::detectDropouts() const
+{
+    return muse::settings()->value(DETECT_DROPOUTS_KEY).toBool();
+}
+
+void RecordConfiguration::setDetectDropouts(bool enable)
+{
+    muse::settings()->setSharedValue(DETECT_DROPOUTS_KEY, muse::Val(enable));
+}
+
+muse::async::Notification RecordConfiguration::detectDropoutsChanged() const
+{
+    return m_detectDropoutsChanged;
+}
+
+double RecordConfiguration::leadInTimeDuration() const
+{
+    return muse::settings()->value(LEAD_IN_TIME_DURATION_KEY).toDouble();
+}
+
+void RecordConfiguration::setLeadInTimeDuration(double seconds)
+{
+    muse::settings()->setSharedValue(LEAD_IN_TIME_DURATION_KEY, muse::Val(seconds));
+}
+
+muse::async::Notification RecordConfiguration::leadInTimeDurationChanged() const
+{
+    return m_leadInTimeDurationChanged;
+}
+
+double RecordConfiguration::crossfadeDuration() const
+{
+    return muse::settings()->value(CROSSFADE_DURATION_KEY).toDouble();
+}
+
+void RecordConfiguration::setCrossfadeDuration(double milliseconds)
+{
+    muse::settings()->setSharedValue(CROSSFADE_DURATION_KEY, muse::Val(milliseconds));
+}
+
+muse::async::Notification RecordConfiguration::crossfadeDurationChanged() const
+{
+    return m_crossfadeDurationChanged;
+}
+
+bool RecordConfiguration::isSoundActivatedRecordingOn() const
+{
+    return muse::settings()->value(SOUND_ACTIVATED_RECORDING_KEY).toBool();
+}
+
+void RecordConfiguration::setIsSoundActivatedRecordingOn(bool enable)
+{
+    muse::settings()->setSharedValue(SOUND_ACTIVATED_RECORDING_KEY, muse::Val(enable));
+}
+
+muse::async::Notification RecordConfiguration::isSoundActivatedRecordingOnChanged() const
+{
+    return m_isSoundActivatedRecordingOnChanged;
+}
+
+double RecordConfiguration::soundActivationLevel() const
+{
+    return muse::settings()->value(SOUND_ACTIVATION_LEVEL_KEY).toDouble();
+}
+
+void RecordConfiguration::setSoundActivationLevel(double db)
+{
+    muse::settings()->setSharedValue(SOUND_ACTIVATION_LEVEL_KEY, muse::Val(db));
+}
+
+muse::async::Notification RecordConfiguration::soundActivationLevelChanged() const
+{
+    return m_soundActivationLevelChanged;
+}
+
+RecordingTrackNameOptions RecordConfiguration::recordingTrackNameOptions() const
+{
+    RecordingTrackNameOptions options;
+    options.useCustomName = muse::settings()->value(RECORDING_NAME_CUSTOM_KEY).toBool();
+    options.customName = muse::settings()->value(CUSTOM_TRACK_NAME_KEY).toString();
+    options.addTrackNumber = muse::settings()->value(TRACK_NUMBER_KEY).toBool();
+    options.addDateStamp = muse::settings()->value(DATE_STAMP_KEY).toBool();
+    options.addTimeStamp = muse::settings()->value(TIME_STAMP_KEY).toBool();
+    return options;
+}
+
+TimedRecordingOptions RecordConfiguration::timedRecordingOptions() const
+{
+    TimedRecordingOptions options;
+    options.durationSeconds = muse::settings()->value(TIMED_RECORDING_DURATION_KEY).toInt64();
+    options.saveProject = muse::settings()->value(TIMED_RECORDING_SAVE_PROJECT_KEY).toBool();
+    options.exportAudio = muse::settings()->value(TIMED_RECORDING_EXPORT_AUDIO_KEY).toBool();
+    options.quitAudacity = muse::settings()->value(TIMED_RECORDING_QUIT_AUDACITY_KEY).toBool();
+    return options;
+}
+
+void RecordConfiguration::setTimedRecordingOptions(const TimedRecordingOptions& options)
+{
+    muse::settings()->setSharedValue(TIMED_RECORDING_DURATION_KEY, muse::Val(options.durationSeconds));
+    muse::settings()->setSharedValue(TIMED_RECORDING_SAVE_PROJECT_KEY, muse::Val(options.saveProject));
+    muse::settings()->setSharedValue(TIMED_RECORDING_EXPORT_AUDIO_KEY, muse::Val(options.exportAudio));
+    muse::settings()->setSharedValue(TIMED_RECORDING_QUIT_AUDACITY_KEY, muse::Val(options.quitAudacity));
+}

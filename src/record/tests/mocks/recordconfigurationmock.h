@@ -1,0 +1,55 @@
+/*
+* Audacity: A Digital Audio Editor
+*/
+#pragma once
+
+#include <gmock/gmock.h>
+
+#include "record/irecordconfiguration.h"
+
+namespace au::record {
+class RecordConfigurationMock : public IRecordConfiguration
+{
+public:
+    MOCK_METHOD(bool, isMicMeteringOn, (), (const, override));
+    MOCK_METHOD(void, setIsMicMeteringOn, (bool), (override));
+    MOCK_METHOD(muse::async::Notification, isMicMeteringOnChanged, (), (const, override));
+
+    MOCK_METHOD(bool, isInputMonitoringOn, (), (const, override));
+    MOCK_METHOD(void, setIsInputMonitoringOn, (bool), (override));
+    MOCK_METHOD(muse::async::Notification, isInputMonitoringOnChanged, (), (const, override));
+
+    MOCK_METHOD(bool, isOverdubOn, (), (const, override));
+    MOCK_METHOD(void, setIsOverdubOn, (bool), (override));
+    MOCK_METHOD(muse::async::Notification, isOverdubOnChanged, (), (const, override));
+
+    MOCK_METHOD(bool, recordOnNewTrack, (), (const, override));
+    MOCK_METHOD(void, setRecordOnNewTrack, (bool), (override));
+    MOCK_METHOD(muse::async::Notification, recordOnNewTrackChanged, (), (const, override));
+
+    MOCK_METHOD(bool, detectDropouts, (), (const, override));
+    MOCK_METHOD(void, setDetectDropouts, (bool), (override));
+    MOCK_METHOD(muse::async::Notification, detectDropoutsChanged, (), (const, override));
+
+    MOCK_METHOD(double, leadInTimeDuration, (), (const, override));
+    MOCK_METHOD(void, setLeadInTimeDuration, (double), (override));
+    MOCK_METHOD(muse::async::Notification, leadInTimeDurationChanged, (), (const, override));
+
+    MOCK_METHOD(double, crossfadeDuration, (), (const, override));
+    MOCK_METHOD(void, setCrossfadeDuration, (double), (override));
+    MOCK_METHOD(muse::async::Notification, crossfadeDurationChanged, (), (const, override));
+
+    MOCK_METHOD(bool, isSoundActivatedRecordingOn, (), (const, override));
+    MOCK_METHOD(void, setIsSoundActivatedRecordingOn, (bool), (override));
+    MOCK_METHOD(muse::async::Notification, isSoundActivatedRecordingOnChanged, (), (const, override));
+
+    MOCK_METHOD(double, soundActivationLevel, (), (const, override));
+    MOCK_METHOD(void, setSoundActivationLevel, (double), (override));
+    MOCK_METHOD(muse::async::Notification, soundActivationLevelChanged, (), (const, override));
+
+    MOCK_METHOD(RecordingTrackNameOptions, recordingTrackNameOptions, (), (const, override));
+
+    MOCK_METHOD(TimedRecordingOptions, timedRecordingOptions, (), (const, override));
+    MOCK_METHOD(void, setTimedRecordingOptions, (const TimedRecordingOptions&), (override));
+};
+}

@@ -68,8 +68,39 @@ impl Platform for IosPlatform {
     }
 }
 
+/// Minimal logger: stderr shows in Xcode / `simctl launch --console-pty`; errors also go to
+/// `Documents/soundcue.log` so they can be read from the Files app on a real device.
+struct StderrLog;
+impl log::Log for StderrLog {
+    fn enabled(&self, m: &log::Metadata) -> bool {
+        let t = m.target();
+        m.level() <= log::Level::Warn
+            || ((t.starts_with("eframe") || t.starts_with("soundcue")) && m.level() <= log::Level::Info)
+    }
+    fn log(&self, r: &log::Record) {
+        if !self.enabled(r.metadata()) { return; }
+        let line = format!("[{} {}] {}", r.level(), r.target(), r.args());
+        eprintln!("{line}");
+        if r.level() <= log::Level::Error {
+            use std::io::Write;
+            if let Ok(mut f) = std::fs::OpenOptions::new().create(true).append(true).open(home().join("Documents").join("soundcue.log")) {
+                let _ = writeln!(f, "{line}");
+            }
+        }
+    }
+    fn flush(&self) {}
+}
+static LOGGER: StderrLog = StderrLog;
+
 #[no_mangle]
 pub extern "C" fn soundcue_start() {
+    let _ = log::set_logger(&LOGGER).map(|()| log::set_max_level(log::LevelFilter::Info));
+    let prev = std::panic::take_hook();
+    std::panic::set_hook(Box::new(move |info| {
+        log::error!("panic: {info}");
+        prev(info);
+    }));
+    log::info!(target: "soundcue", "starting");
     let options = eframe::NativeOptions {
         renderer: eframe::Renderer::Wgpu,
         ..Default::default()

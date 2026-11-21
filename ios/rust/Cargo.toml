@@ -11,3 +11,4 @@ crate-type = ["staticlib"]
 [dependencies]
 soundcue-ui = { path = "../../crates/soundcue-ui" }
 eframe = { version = "0.37", default-features = false, features = ["wgpu", "default_fonts"] }
+log = { version = "0.4", features = ["std"] }

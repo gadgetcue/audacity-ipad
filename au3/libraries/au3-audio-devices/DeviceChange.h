@@ -22,7 +22,7 @@ using DeviceChangeMessagePublisher = Observer::Publisher<DeviceChangeMessage>;
 
 #include <memory>
 
-#if defined(__WXMSW__) || defined(__WXMAC__) || defined(HAVE_LIBUDEV_H)
+#if defined(__WXMSW__) || (defined(__WXMAC__) && !defined(__WXOSX_IPHONE__)) || defined(HAVE_LIBUDEV_H)
 #define HAVE_DEVICE_CHANGE
 #endif
 

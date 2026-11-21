@@ -1,0 +1,10 @@
+[workspace]
+resolver = "2"
+members = ["crates/soundcue-ui", "ios/rust"]
+
+[profile.release]
+opt-level = 3
+lto = "fat"
+codegen-units = 1
+strip = "debuginfo"
+panic = "abort"

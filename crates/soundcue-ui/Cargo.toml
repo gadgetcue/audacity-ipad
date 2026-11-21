@@ -1,0 +1,9 @@
+[package]
+name = "soundcue-ui"
+version = "0.0.1"
+edition = "2021"
+description = "TEMPORARY stub of the shared SoundCue UI crate, used only to prove the iOS pipeline"
+
+[dependencies]
+eframe = { version = "0.37", default-features = false, features = ["wgpu", "default_fonts"] }
+cpal = "0.18"

@@ -51,7 +51,7 @@ on:
 
 concurrency:
   group: au4_build_windows-${{ github.ref }}-${{ github.event.issue.number }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 env:
   CI_DIR: buildscripts/ci

@@ -65,7 +65,9 @@ include(${CMAKE_CURRENT_LIST_DIR}/au3wrapDefs.cmake)
 
 # Third-party libraries (not part of au3/libraries)
 add_subdirectory(${CMAKE_SOURCE_DIR}/thirdparty/pffft au3-pffft)
-add_subdirectory(${CMAKE_SOURCE_DIR}/thirdparty/portmixer au3-portmixer)
+if (AU_USE_PORTMIXER)
+    add_subdirectory(${CMAKE_SOURCE_DIR}/thirdparty/portmixer au3-portmixer)
+endif()
 tft_add_to_build()
 
 # Conditional third-party SDKs (must be set up before AU3 libraries)

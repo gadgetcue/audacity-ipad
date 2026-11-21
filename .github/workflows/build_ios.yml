@@ -84,6 +84,7 @@ jobs:
 
     - name: Build
       run: |
+        defaults write com.apple.dt.Xcode IDEBuildingContinueBuildingAfterErrors -bool YES
         cmake --build build.ios --config Release -- -sdk ${{ matrix.sdk }} -quiet \
           CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO
         APP=$(find build.ios -name "*.app" -path "*Release-${{ matrix.sdk }}*" -maxdepth 6 | head -1)

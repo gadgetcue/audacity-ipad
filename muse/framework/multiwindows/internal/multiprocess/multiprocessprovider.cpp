@@ -263,7 +263,11 @@ bool MultiProcessProvider::openNewWindow(const QStringList& args)
     QList<ipc::ID> currentApps = m_ipcChannel->instances();
 
     QString appPath = QCoreApplication::applicationFilePath();
+#if QT_CONFIG(process)
     bool ok = QProcess::startDetached(appPath, args);
+#else
+    bool ok = false; // iOS: one app process only
+#endif
     if (ok) {
         LOGI() << "success start: " << appPath << ", args: " << args;
     } else {

@@ -101,8 +101,21 @@ pub extern "C" fn soundcue_start() {
         prev(info);
     }));
     log::info!(target: "soundcue", "starting");
+    // The iOS Simulator's Metal device reports lower limits than wgpu's defaults
+    // (e.g. max_inter_stage_shader_variables 15 < 16), so ask only for what the adapter has.
+    let mut setup = eframe::egui_wgpu::WgpuSetupCreateNew::without_display_handle();
+    setup.instance_descriptor.backends = eframe::wgpu::Backends::METAL;
+    setup.device_descriptor = std::sync::Arc::new(|adapter| eframe::wgpu::DeviceDescriptor {
+        label: Some("soundcue ios device"),
+        required_limits: adapter.limits(),
+        ..Default::default()
+    });
     let options = eframe::NativeOptions {
         renderer: eframe::Renderer::Wgpu,
+        wgpu_options: eframe::egui_wgpu::WgpuConfiguration {
+            wgpu_setup: eframe::egui_wgpu::WgpuSetup::CreateNew(setup),
+            ..Default::default()
+        },
         ..Default::default()
     };
     let r = eframe::run_native(

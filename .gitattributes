@@ -12,3 +12,15 @@
 *.ttl text=auto
 *.aps text=auto
 *.trig text=auto
+# binary assets (fonts, projects, raw audio, images) must never be eol-converted
+*.ttf -text
+*.otf -text
+*.aup4 -text
+*.aup -text
+*.bmp -text
+*.tiff -text
+*.raw -text
+*.mws -text
+*.jpg -text
+*.7z -text
+*.zip -text

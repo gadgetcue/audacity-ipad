@@ -37,7 +37,7 @@ using namespace muse::media;
 namespace {
 QString libraryFileName(const QString& component, int version)
 {
-#if defined(Q_OS_MAC)
+#if defined(Q_OS_MACOS)
     return QStringLiteral("lib%1.%2.dylib").arg(component).arg(version);
 #elif defined(Q_OS_LINUX) || defined(Q_OS_FREEBSD)
     return QStringLiteral("lib%1.so.%2").arg(component).arg(version);

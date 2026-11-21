@@ -54,7 +54,7 @@ Settings::Settings()
     QSettings::setPath(QSettings::IniFormat, QSettings::SystemScope, dataPath().toQString());
 #endif
 
-#ifndef Q_OS_MAC
+#ifndef Q_OS_MACOS
     QSettings::setDefaultFormat(QSettings::IniFormat);
 #endif
 }

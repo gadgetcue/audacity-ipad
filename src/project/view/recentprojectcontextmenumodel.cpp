@@ -19,7 +19,7 @@ const QString SHOW_IN_FOLDER_ITEM_ID("project-show-in-folder");
 
 muse::TranslatableString showInFolderTitle()
 {
-#if defined(Q_OS_MAC)
+#if defined(Q_OS_MACOS)
     return muse::TranslatableString("action", "Show in Finder");
 #elif defined(Q_OS_WIN)
     return muse::TranslatableString("action", "Show in Explorer");

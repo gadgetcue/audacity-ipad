@@ -198,7 +198,7 @@ void MultiProcessProvider::activateWindowWithProject(const io::path_t& projectPa
         return;
     }
 
-#ifndef Q_OS_MAC
+#ifndef Q_OS_MACOS
     // On macOS, this is not desirable, since raising the main window of the other instance works properly without this
     mainWindow()->requestShowOnBack();
 #endif
@@ -232,7 +232,7 @@ void MultiProcessProvider::activateWindowWithoutProject(const QStringList& args)
         return;
     }
 
-#ifndef Q_OS_MAC
+#ifndef Q_OS_MACOS
     // On macOS, this is not desirable, since raising the main window of the other instance works properly without this
     mainWindow()->requestShowOnBack();
 #endif
@@ -329,7 +329,7 @@ void MultiProcessProvider::activateWindowWithOpenedPreferences() const
         return;
     }
 
-#ifndef Q_OS_MAC
+#ifndef Q_OS_MACOS
     // On macOS, this is not desirable, since raising the main window of the other instance works properly without this
     mainWindow()->requestShowOnBack();
 #endif

@@ -55,7 +55,7 @@ io::paths_t defaultSearchPaths()
         }
         settings.endGroup(); // Back to parent group.
     }
-#elif defined(Q_OS_MAC)
+#elif defined(Q_OS_MACOS)
     RetVal<io::paths_t> providers = io::Dir::scanFiles("/Library/Application Support/FFmpeg/Providers", { "*" },
                                                        io::ScanMode::FoldersInCurrentDir);
     if (providers.ret) {
@@ -88,7 +88,7 @@ static FFmpegLibPaths libraryPathsForVersion(int ffmpegVer, const io::path_t& se
     }
 
     io::path_t avutilName, avcodecName, avformatName, swscaleName, swresampleName;
-#if defined(Q_OS_MAC)
+#if defined(Q_OS_MACOS)
     avutilName = io::path_t("libavutil." + std::to_string(ffmpegVersionInfo.avUtilVersion) + ".dylib");
     avcodecName = io::path_t("libavcodec." + std::to_string(ffmpegVersionInfo.avCodecVersion) + ".dylib");
     avformatName = io::path_t("libavformat." + std::to_string(ffmpegVersionInfo.avFormatVersion) + ".dylib");
@@ -135,7 +135,7 @@ FFmpegVersion versionFromAVFormatPath(const io::path_t& path)
 {
     std::string name = io::filename(path, true).toStdString();
     int avVer = -1;
-#if defined(Q_OS_MAC)
+#if defined(Q_OS_MACOS)
     // libavformat.60.dylib
     size_t dot = name.rfind('.');
     if (dot != std::string::npos && dot > 0) {

@@ -41,7 +41,7 @@
 #include "view/iconcodes.h"
 #include "view/widgetstyle.h"
 
-#ifdef Q_OS_MAC
+#ifdef Q_OS_MACOS
 #include "internal/platform/macos/macosplatformtheme.h"
 #include "internal/windowscontroller.h"
 #elif defined(Q_OS_WIN)
@@ -84,7 +84,7 @@ void UiModule::registerExports()
 
     m_theme = std::make_shared<api::ThemeApi>(nullptr);
 
-    #ifdef Q_OS_MAC
+    #ifdef Q_OS_MACOS
     m_platformTheme = std::make_shared<MacOSPlatformTheme>();
     #elif defined(Q_OS_WIN)
     m_platformTheme = std::make_shared<WindowsPlatformTheme>();
@@ -167,7 +167,7 @@ void UiModuleContext::registerExports()
     m_uiengine = std::make_shared<UiEngine>(iocContext());
     m_keyNavigationController = std::make_shared<NavigationController>(iocContext());
 
-    #ifdef Q_OS_MAC
+    #ifdef Q_OS_MACOS
     m_windowsController = std::make_shared<WindowsController>();
     #elif defined(Q_OS_WIN)
     m_windowsController = std::make_shared<WinWindowsController>(iocContext());

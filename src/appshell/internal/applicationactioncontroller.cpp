@@ -55,7 +55,7 @@ void ApplicationActionController::preInit()
 {
     qApp->installEventFilter(this);
 
-#ifdef Q_OS_MAC
+#ifdef Q_OS_MACOS
     // Re-open window when user clicks the dock icon while all windows are closed
     connect(qApp, &QGuiApplication::applicationStateChanged, this, [this](Qt::ApplicationState state) {
         if (state != Qt::ApplicationActive) {
@@ -223,7 +223,7 @@ bool ApplicationActionController::eventFilter(QObject* watched, QEvent* event)
             event->accept();
             return true;
         }
-#ifdef Q_OS_MAC
+#ifdef Q_OS_MACOS
         // On macos closing the last window does not exit the app
         if (!projectFilesController()->closeOpenedProject()) {
             event->ignore();

@@ -441,7 +441,7 @@ QRect WindowView::currentScreenGeometry() const
     QRect geometry;
 
     // See PR #10558
-#ifndef Q_OS_MAC
+#ifndef Q_OS_MACOS
     geometry = mainWindow()->isFullScreen() ? screen->geometry() : screen->availableGeometry();
 #else
     geometry = screen->availableGeometry();

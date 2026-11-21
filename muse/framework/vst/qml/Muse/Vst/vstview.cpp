@@ -93,7 +93,7 @@ Steinberg::tresult VstView::queryInterface(const ::Steinberg::TUID _iid, void** 
 
 static FIDString currentPlatformUiType()
 {
-#ifdef Q_OS_MAC
+#ifdef Q_OS_MACOS
     return Steinberg::kPlatformTypeNSView;
 #elif defined(Q_OS_IOS)
     return Steinberg::kPlatformTypeUIView;
@@ -196,7 +196,7 @@ void VstView::init()
     removeMinMaxButtons(rootHandle);
 #endif
 
-#ifdef Q_OS_MAC
+#ifdef Q_OS_MACOS
     window()->installEventFilter(this);
 #endif
 }
@@ -356,7 +356,7 @@ void VstView::updateScreenMetrics(QScreen* screen)
 {
     m_currentScreen = screen;
     m_screenMetrics.availableSize = m_currentScreen->availableSize();
-#ifdef Q_OS_MAC
+#ifdef Q_OS_MACOS
     constexpr auto devicePixelRatio = 1.0;
 #else
     const auto devicePixelRatio = m_currentScreen->devicePixelRatio();

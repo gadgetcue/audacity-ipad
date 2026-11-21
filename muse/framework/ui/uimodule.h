@@ -34,7 +34,7 @@ namespace muse::ui {
 class UiConfiguration;
 class WidgetStyle;
 
-#ifdef Q_OS_MAC
+#ifdef Q_OS_MACOS
 class MacOSPlatformTheme;
 #elif defined(Q_OS_WIN)
 class WindowsPlatformTheme;
@@ -64,7 +64,7 @@ private:
     std::shared_ptr<api::ThemeApi> m_theme;
     WidgetStyle* m_widgetStyle = nullptr; // becomes owned by QApplication
 
-    #ifdef Q_OS_MAC
+    #ifdef Q_OS_MACOS
     std::shared_ptr<MacOSPlatformTheme> m_platformTheme;
     #elif defined(Q_OS_WIN)
     std::shared_ptr<WindowsPlatformTheme> m_platformTheme;

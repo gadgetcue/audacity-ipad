@@ -49,7 +49,7 @@
 #include "view/newprojectmodel.h"
 #include "internal/opensaveprojectscenario.h"
 
-#ifdef Q_OS_MAC
+#ifdef Q_OS_MACOS
 #include "internal/platform/macos/macosrecentfilescontroller.h"
 #elif defined (Q_OS_WIN)
 #include "internal/platform/windows/windowsrecentfilescontroller.h"
@@ -76,7 +76,7 @@ void ProjectModule::registerExports()
 {
     m_configuration = std::make_shared<ProjectConfiguration>();
 
-#ifdef Q_OS_MAC
+#ifdef Q_OS_MACOS
     m_recentFilesController = std::make_shared<MacOSRecentFilesController>();
 #elif defined(Q_OS_WIN)
     m_recentFilesController = std::make_shared<WindowsRecentFilesController>();

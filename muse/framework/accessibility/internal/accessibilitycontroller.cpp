@@ -393,7 +393,7 @@ void AccessibilityController::propertyChanged(IAccessible* item, IAccessible::Pr
             m_announcement.clear();
         }
 
-#if defined(Q_OS_MAC)
+#if defined(Q_OS_MACOS)
         // Names and descriptions are combined in accessibleiteminterface.cpp.
         etype = QAccessible::NameChanged;
 #elif defined(Q_OS_WIN)
@@ -589,7 +589,7 @@ bool AccessibilityController::needsRevoicing(const QAccessibleInterface& iface, 
     }
     // Narrator & NVDA ignore name & accelerator changes.
     return true;
-#elif defined(Q_OS_MAC)
+#elif defined(Q_OS_MACOS)
     IF_ASSERT_FAILED(textType == QAccessible::Name) {
         return false; // VoiceOver only reads names.
     }

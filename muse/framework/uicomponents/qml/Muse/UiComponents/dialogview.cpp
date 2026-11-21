@@ -25,7 +25,7 @@
 #include <QQuickView>
 #include <QScreen>
 
-#ifdef Q_OS_MAC
+#ifdef Q_OS_MACOS
 #include "internal/platform/macos/macoswindowlevelcontroller.h"
 #endif
 
@@ -104,7 +104,7 @@ void DialogView::onHidden()
 
 void DialogView::afterShow()
 {
-#ifdef Q_OS_MAC
+#ifdef Q_OS_MACOS
     if (m_alwaysAboveApp) {
         MacOSWindowLevelController::setAlwaysAboveApp(m_view);
     }

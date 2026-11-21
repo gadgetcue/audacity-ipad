@@ -49,7 +49,7 @@ muse::io::path_t MuseSamplerConfiguration::defaultLibraryPath() const
     return globalConfig()->genericDataPath() + "/MuseSampler/lib/libMuseSamplerCoreLib.so";
 }
 
-#elif defined(Q_OS_MAC)
+#elif defined(Q_OS_MACOS)
 muse::io::path_t MuseSamplerConfiguration::defaultLibraryPath() const
 {
     return globalConfig()->genericDataPath() + "/MuseSampler/lib/libMuseSamplerCoreLib.dylib";

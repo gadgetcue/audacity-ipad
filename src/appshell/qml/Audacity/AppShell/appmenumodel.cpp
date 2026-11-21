@@ -291,7 +291,7 @@ MenuItem* AppMenuModel::makeEditMenu()
         makeMenuItem(trackedit::TRACKEDIT_SILENCE_AUDIO_SELECTION_COMMAND, TranslatableString("action", "Silence audio")),
         makeSeparator(),
         makeMenuItem(PROJECT_OPEN_METADATA_DIALOG_COMMAND, TranslatableString("action", "Metadata editor")),
-#ifndef Q_OS_MAC
+#ifndef Q_OS_MACOS
         makeSeparator(),
 #endif
         makeMenuItem(APP_PREFERENCES_COMMAND, MenuItemRole::PreferencesRole)
@@ -341,7 +341,7 @@ MenuItem* AppMenuModel::makeViewMenu()
                     au::shared::translateWorkspaceTitles(m_workspacesMenuModel->items()), "menu-workspaces")
         << makeSeparator()
 #endif
-#ifndef Q_OS_MAC
+#ifndef Q_OS_MACOS
         << makeMenuItem(APP_TOGGLE_FULLSCREEN_COMMAND)
         << makeSeparator()
 #endif

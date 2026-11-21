@@ -220,7 +220,7 @@ bool VstViewDialog::event(QEvent* ev)
 
 FIDString VstViewDialog::currentPlatformUiType() const
 {
-#ifdef Q_OS_MAC
+#ifdef Q_OS_MACOS
     return Steinberg::kPlatformTypeNSView;
 #elif defined(Q_OS_IOS)
     return Steinberg::kPlatformTypeUIView;

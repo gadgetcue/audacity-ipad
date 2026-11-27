@@ -51,7 +51,7 @@ jobs:
         echo "QT_IOS=$RUNNER_TEMP/Qt/$QT_VERSION/ios"   >> $GITHUB_ENV
 
     - name: Restore iOS dependencies
-      uses: actions/cache/restore@v5
+      uses: actions/cache/restore@v6
       with:
         path: build.ios/_deps
         key: ios-deps-${{ matrix.sdk }}-${{ hashFiles('muse_deps/**', 'buildscripts/cmake/DependencyManifest.cmake', 'muse/buildscripts/cmake/ExtDepsManifest.cmake') }}
@@ -77,7 +77,7 @@ jobs:
 
     - name: Save iOS dependencies
       if: always()
-      uses: actions/cache/save@v5
+      uses: actions/cache/save@v6
       with:
         path: build.ios/_deps
         key: ios-deps-${{ matrix.sdk }}-${{ hashFiles('muse_deps/**', 'buildscripts/cmake/DependencyManifest.cmake', 'muse/buildscripts/cmake/ExtDepsManifest.cmake') }}-${{ github.run_id }}
